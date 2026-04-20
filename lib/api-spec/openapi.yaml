@@ -1,0 +1,568 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Fleet Manager API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: vehicles
+    description: Vehicle management
+  - name: maintenance
+    description: Maintenance records
+  - name: gastos
+    description: Expense management
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /vehicles:
+    get:
+      operationId: getVehicles
+      tags: [vehicles]
+      summary: List all vehicles
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by interno or plate
+      responses:
+        "200":
+          description: List of vehicles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VehicleWithStatus"
+    post:
+      operationId: createVehicle
+      tags: [vehicles]
+      summary: Create a vehicle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVehicleRequest"
+      responses:
+        "201":
+          description: Created vehicle
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleWithStatus"
+        "409":
+          description: Interno already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /vehicles/{interno}:
+    get:
+      operationId: getVehicle
+      tags: [vehicles]
+      summary: Get a vehicle by interno (public)
+      parameters:
+        - name: interno
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Vehicle
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleWithStatus"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateVehicle
+      tags: [vehicles]
+      summary: Update a vehicle
+      parameters:
+        - name: interno
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVehicleRequest"
+      responses:
+        "200":
+          description: Updated vehicle
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleWithStatus"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteVehicle
+      tags: [vehicles]
+      summary: Delete a vehicle
+      parameters:
+        - name: interno
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /vehicles/{interno}/qr:
+    get:
+      operationId: getVehicleQr
+      tags: [vehicles]
+      summary: Get QR code for a vehicle
+      parameters:
+        - name: interno
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: QR code image URL info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QrResponse"
+
+  /vehicles/{interno}/maintenance:
+    get:
+      operationId: getMaintenance
+      tags: [maintenance]
+      summary: Get maintenance records for a vehicle
+      parameters:
+        - name: interno
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Maintenance records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MaintenanceRecord"
+    post:
+      operationId: createMaintenance
+      tags: [maintenance]
+      summary: Add a maintenance record
+      parameters:
+        - name: interno
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMaintenanceRequest"
+      responses:
+        "201":
+          description: Created maintenance record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceRecord"
+
+  /vehicles/{interno}/maintenance/{id}:
+    delete:
+      operationId: deleteMaintenance
+      tags: [maintenance]
+      summary: Delete a maintenance record
+      parameters:
+        - name: interno
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /gastos:
+    get:
+      operationId: getGastos
+      tags: [gastos]
+      summary: Get expense records with optional filters
+      parameters:
+        - name: mes
+          in: query
+          schema:
+            type: string
+          description: Month number (1-12)
+        - name: anio
+          in: query
+          schema:
+            type: string
+          description: Four-digit year
+        - name: secretaria
+          in: query
+          schema:
+            type: string
+        - name: direccion
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Expense records
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GastosResponse"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success]
+
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required: [username, password]
+
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        user:
+          $ref: "#/components/schemas/User"
+      required: [success, user]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+      required: [id, username]
+
+    Vehicle:
+      type: object
+      properties:
+        id:
+          type: integer
+        interno:
+          type: string
+        plate:
+          type: string
+        brand:
+          type: string
+        model:
+          type: string
+        year:
+          type: integer
+        currentKm:
+          type: integer
+        secretaria:
+          type: string
+        direccion:
+          type: string
+        qrPath:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, interno, plate, brand, model, year, currentKm, secretaria, direccion, createdAt, updatedAt]
+
+    VehicleWithStatus:
+      allOf:
+        - $ref: "#/components/schemas/Vehicle"
+        - type: object
+          properties:
+            lastServiceKm:
+              type: integer
+              nullable: true
+            lastServiceDate:
+              type: string
+              nullable: true
+            kmSinceService:
+              type: integer
+              nullable: true
+            serviceStatus:
+              type: string
+              enum: [ok, warning, overdue, no_service]
+            kmUntilService:
+              type: integer
+              nullable: true
+          required: [serviceStatus]
+
+    CreateVehicleRequest:
+      type: object
+      properties:
+        interno:
+          type: string
+        plate:
+          type: string
+        brand:
+          type: string
+        model:
+          type: string
+        year:
+          type: integer
+        currentKm:
+          type: integer
+        secretaria:
+          type: string
+        direccion:
+          type: string
+      required: [interno, plate, brand, model, year, currentKm]
+
+    UpdateVehicleRequest:
+      type: object
+      properties:
+        plate:
+          type: string
+        brand:
+          type: string
+        model:
+          type: string
+        year:
+          type: integer
+        currentKm:
+          type: integer
+        secretaria:
+          type: string
+        direccion:
+          type: string
+
+    MaintenanceRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+        vehicleId:
+          type: integer
+        date:
+          type: string
+        serviceKm:
+          type: integer
+        description:
+          type: string
+        mechanic:
+          type: string
+        proveedor:
+          type: string
+        tipo:
+          type: string
+        monto:
+          type: number
+        createdAt:
+          type: string
+      required: [id, vehicleId, date, serviceKm, description, mechanic, createdAt]
+
+    CreateMaintenanceRequest:
+      type: object
+      properties:
+        date:
+          type: string
+        serviceKm:
+          type: integer
+        description:
+          type: string
+        mechanic:
+          type: string
+        proveedor:
+          type: string
+        tipo:
+          type: string
+        monto:
+          type: number
+      required: [date, serviceKm, description, mechanic]
+
+    GastoRow:
+      type: object
+      properties:
+        id:
+          type: integer
+        vehicleId:
+          type: integer
+        interno:
+          type: string
+        brand:
+          type: string
+        model:
+          type: string
+        secretaria:
+          type: string
+        direccion:
+          type: string
+        date:
+          type: string
+        serviceKm:
+          type: integer
+        description:
+          type: string
+        mechanic:
+          type: string
+        proveedor:
+          type: string
+        tipo:
+          type: string
+        monto:
+          type: number
+        createdAt:
+          type: string
+      required: [id, vehicleId, interno, brand, model, secretaria, direccion, date, serviceKm, description, mechanic, proveedor, tipo, monto, createdAt]
+
+    GastosResponse:
+      type: object
+      properties:
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/GastoRow"
+        totalMonto:
+          type: number
+      required: [rows, totalMonto]
+
+    QrResponse:
+      type: object
+      properties:
+        interno:
+          type: string
+        qrUrl:
+          type: string
+        publicUrl:
+          type: string
+      required: [interno, qrUrl, publicUrl]

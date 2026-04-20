@@ -1,0 +1,21 @@
+packages:
+  "framer-motion": "For smooth page transitions and interactive animations"
+  "@hookform/resolvers": "For Zod validation with react-hook-form"
+  "react-hook-form": "For robust form state management"
+  "zod": "For form schema validation"
+  "date-fns": "For formatting dates cleanly"
+  "clsx": "Utility for constructing className strings conditionally"
+  "tailwind-merge": "Utility function to efficiently merge Tailwind CSS classes"
+
+images:
+  - path: "artifacts/fleet-manager/public/images/login-bg.png"
+    description: "Abstract modern geometric background in deep slate and vibrant blue, professional automotive technology theme, dark aesthetic with subtle light flares"
+    aspect_ratio: "16:9"
+  - path: "artifacts/fleet-manager/public/images/logo-mark.png"
+    description: "Minimalist modern logo mark for a fleet management software, sharp geometric shapes resembling a vehicle or shield, bright blue on transparent background"
+    aspect_ratio: "1:1"
+
+notes:
+  - Using generated hooks from @workspace/api-client-react for all API calls
+  - Using wouter for routing with dynamic base path support
+  - Assuming the API handles auth via HttpOnly cookies (session based)
